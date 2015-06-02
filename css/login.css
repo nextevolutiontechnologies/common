@@ -1,0 +1,91 @@
+/*body {
+  margin: 80px 0;
+  background-image: none;
+  background-color: #333;
+}*/
+#login-container {
+  position: relative;
+  width: 90%;
+	padding-top: 80px;
+  margin: 0 auto;
+  text-align: center;
+}
+#login-container .row > div {
+  margin-bottom: 1em;
+}
+#login-container .row > div:last-child {
+  margin-bottom: 0;
+}
+#login-container #logo {
+	 padding:20px 0;
+	 margin-top: -40px;
+	 margin-bottom: 20px;
+	 background: #12202f;
+	 border-radius: 5px;  
+}
+#login-container #logo img {
+	width: 200px;
+}
+#login-container #logo:hover {
+  background-color: #12202f;
+}
+#login-container #signup-btn {
+  padding-top: 15px;
+  padding-bottom: 15px;
+  color: #fff;
+  background-color: #12202f;
+  border-color: #12202f;
+}
+#login-container #signup-btn:hover {
+  background-color: #12202f;
+  border-color: #12202f;
+}
+#login {
+  position: relative;
+  padding: 65px 25px 50px 25px;
+  margin-bottom: 1em;
+  background-color: #FFF;
+  border-top-right-radius: 4px;
+  border-top-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-bottom-left-radius: 4px;
+  -webkit-box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.65);
+  box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.65);
+}
+#login #login-form, #login #reset-password {
+  padding: 0;
+  margin-top: 2em;
+  margin-bottom: 2em;
+  text-align: left;
+}
+#login #reset-password {
+	margin-bottom: 0;
+}
+#login #login-form label, #login #reset-password label {
+  display: none;
+}
+#login #login-form .form-control, #login #reset-password .form-control {
+  height: 40px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+#login #login-btn {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 20px;
+}
+#login #returnedResult {
+	text-align: left;
+}
+@media (min-width: 768px) {
+  #login-container {
+    width: 450px;
+  }
+  #login-container .row > div {
+    margin-bottom: 0;
+  }
+  #login #login-form, #login #reset-password {
+    padding: 0 25px;
+    text-align: left;
+  }
+}
