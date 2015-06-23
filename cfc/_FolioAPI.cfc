@@ -81,28 +81,6 @@
 		<cfreturn responseObject>
 	</cffunction>
 	
-	<cffunction name="getPerformanceRawData" returntype="struct">
-	<!--- 	<cfargument name="filter" required="no" type="string"> --->
-		
-		<cfset var parameters = StructNew()>
-		<cfset var responseObject = StructNew()>
-		
-		<!--- <cfif StructKeyExists( ARGUMENTS, "filter" )>
-			<cfset parameters["find"] = ARGUMENTS.filter>
-			
-			<cfset responseObject = this.runAPICall(
-				call = "GET /accounts",
-				params = parameters
-			)>
-		<cfelse> --->
-			<cfset responseObject = this.runAPICallPerformanceRawData(
-				call = "GET /accounts"
-			)>
-	<!--- 	</cfif> --->
-	
-		<cfreturn responseObject>
-	</cffunction>
-	
 <!---
 	Helper functions
 --->
@@ -138,119 +116,10 @@
 		<cfset callURL = this.baseHref & Right( locals.URL, Len( locals.URL )-1 )>
 --->
 		
-		<cfhttp method="get" url="https://api.foliofn.com/restapi/accounts"> 
+		<cfhttp method="get" url="https://api.foliofn.com/restapi/accounts">
 			<cfhttpparam type="header" name="Authorization" value="#DynamicAuthHeaderCF#" />
 			<cfhttpparam type="body" value=''>
 		</cfhttp>
-	
-<cftry>
-			<cfcatch type="Any">
-				
-				<cfif this.debug>
-					<cfoutput>#outputDebugInfo( ARGUMENTS, response )#</cfoutput>
-				</cfif>
-				<cfset response.statuscode = cfhttp.Statuscode>
-				<cfset response.status = "ERROR">
-				<cfreturn response>
-			</cfcatch>
-		</cftry>
-		
-		<cfset response.header = cfhttp.Responseheader>
-		
-		<cfif cfhttp.Statuscode IS NOT "200" AND cfhttp.Statuscode IS NOT "200 OK" AND cfhttp.Statuscode IS NOT "201" AND cfhttp.Statuscode IS NOT "201 Created">
-			<cfset response.status = "ERROR">
-		</cfif>
-		
-		<cfif ( cfhttp.Statuscode IS "200 OK" OR cfhttp.Statuscode IS "201" OR cfhttp.Statuscode IS "201 Created" ) AND NOT Find( "cfdump", cfhttp.Filecontent )>
-			<cfif cfhttp.Mimetype EQ "text/xml">
-				<cftry>
-					<cfset response.object = APPLICATION.API.xml2Struct.ConvertXmlToStruct( cfhttp.Filecontent, response.object )>
-					<cfcatch type="Any">
-						<cfif this.debug>
-							<cfoutput>#outputDebugInfo( ARGUMENTS, response )#</cfoutput>
-						</cfif>
-						
-						<cfset response.statuscode = cfhttp.Statuscode>
-						<cfset response.status = "ERROR">
-						<cfreturn response>
-					</cfcatch>
-				</cftry>
-			<cfelse>
-				<cftry>
-					<cfset response.object = DeserializeJSON( cfhttp.Filecontent )>
-					
-					<cfcatch type="Any">
-						
-						<cfif this.debug>
-							<cfoutput>#outputDebugInfo( ARGUMENTS, response )#</cfoutput>
-						</cfif>
-						
-						<cfset response.statuscode = cfhttp.Statuscode>
-						<cfset response.status = "ERROR">
-						<cfreturn response>
-					</cfcatch>
-				</cftry>			
-			</cfif>
-		<cfelse>
-			<cfif this.debug>
-					<cfoutput>#outputDebugInfo( ARGUMENTS, response )#</cfoutput>
-			</cfif>
-			<cfset response.statuscode = cfhttp.Statuscode>
-			<cfset response.status = "ERROR">
-			<cfreturn response>
-		</cfif>
-		
-		<cfif this.debug>
-			<cfoutput>#outputDebugInfo( ARGUMENTS, response )#</cfoutput>
-		</cfif>
-		
-		<cfsetting enablecfoutputonly="No">
-		
-		
-		<cfreturn response>
-		
-	</cffunction>
-	
-	<cffunction name="runAPICallPerformanceRawData" returntype="struct">
-		<cfargument name="call" type="string" required="yes">
-		<cfargument name="body" type="string" required="no" default="">
-		<cfargument name="params" type="struct" required="no" >
-		
-		<cfset var locals = StructNew()>
-		<cfset var response = StructNew()>
-		<cfset response.object = StructNew()>
-        <cfset response.header = StructNew()>
-        <cfset response.status = "OK">
-		<cfset response.object.call = ARGUMENTS.call>
-		
-		<!--- here is the Dynamic Coldfusion version and the Values from each step --->
-		<!--- Timestamp --->
-		<cfset currentDate = dateTimeFormat(NOW(),"yyyy-mm-dd","PST") />
-		<cfset currentTime = dateTimeFormat(NOW(),"HH:nn:ss.sss","PST") & '-07:00' />
-		<cfset currentTimeEncoded = ReplaceNoCase(currentTime,":","%3A","all" )/>
-		<!--- Signature String --->
-		<cfset DynamicSignature = 'GET\nhttps://api.foliofn.com/restapi/accounts/{accountnumber}/performance/rawdata\n'& currentDate & 'T' & currentTime & '\n' & lcase(HASH(''))  />
-		<!--- HMAC sha256 Encrypt Steps --->
-		<cfset DynamicSignature = replace( DynamicSignature, "\n", chr( 10 ), "all" ) />
-		<cfset DynamicSignatureEncrypted = BinaryEncode(BinaryDecode(lcase(hmac(DynamicSignature, this.ShareSec, "hmacsha256" )),"hex"),"base64") />
-		<!--- URL Encode Steps --->
-		<cfset DynamicURLEncodeCF = URLEncodedFormat(DynamicSignatureEncrypted) />
-		<!--- Final Auth Header  --->
-		<cfset DynamicAuthHeaderCF = 'FOLIOWS FOLIOWS_API_KEY="' & this.apiKey &  '",FOLIOWS_SIGNATURE="' & DynamicURLEncodeCF & '",FOLIOWS_TIMESTAMP="' & currentDate & 'T' & currentTimeEncoded & '"' />
-			
-		
-		<!--- Execute the API call 
-		<cfset callURL = this.baseHref & Right( locals.URL, Len( locals.URL )-1 )>
---->
-		
-		<cfhttp method="get" url="https://api.foliofn.com/restapi/accounts/RB4985000T/performance/rawdata" result="result"> 
-			<cfhttpparam type="header" name="Authorization" value="#DynamicAuthHeaderCF#" />
-			<cfhttpparam type="body" value=''>
-			<cfhttpparam type="URL" name="daterange" value="2015-01-01,2015-02-01" />
-			
-			 
-		</cfhttp>
-	<CFDUMP var="#result#"><CFABORT>
 <cftry>
 			<cfcatch type="Any">
 				
