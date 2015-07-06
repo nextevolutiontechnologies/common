@@ -308,7 +308,7 @@
 		3 - will import the payment type to the vault and no other transaction will be run.
 		(Note) Not passing or setting this name/value will default to "0".
 		--->
-	<!--- <cfhttpparam type="FORMFIELD" name="profileactiontype" value="2" > --->
+	<cfhttpparam type="FORMFIELD" name="profileactiontype" value="3" >
 	<!--- 
 	1 - Credit Card
 	2 - Check
