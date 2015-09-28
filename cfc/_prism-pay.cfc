@@ -2,7 +2,19 @@
 	<cfset This.acctid="PYVAZ">
 	<cfset This.MerchantPin="Z2MYBYS6AA12WDDTKT4N2L1DB9KEN5LX">
 	<cfset This.PostURL="https://trans.merchantpartners.com/cgi-bin/process.cgi">
+<cftry>
+	<cfif Application.BrandID EQ 2>
+		<cfset This.subid="BDYAL">
+	<cfelse>
+		<cfset This.subid="PWRVD">
+	</cfif>
+	<CFSET subID_brandID_2="BDYAL">
+	<CFSET subID_brandID_1="PWRVD">
+<cfcatch>
 	<cfset This.subid="PWRVD">
+</cfcatch>
+</cftry>
+	
 <cffunction name="SaleRequest" returntype="string" output="no" access="remote" description="Make Payment" hint="Makes Payment pass in CC on file ">
 	<cfargument name="CardNum" type="string" Required="yes">
 	<cfargument name="CardExpMonth" type="string" Required="yes">
@@ -308,7 +320,7 @@
 		3 - will import the payment type to the vault and no other transaction will be run.
 		(Note) Not passing or setting this name/value will default to "0".
 		--->
-	<!--- <cfhttpparam type="FORMFIELD" name="profileactiontype" value="2" > --->
+	<cfhttpparam type="FORMFIELD" name="profileactiontype" value="3" >
 	<!--- 
 	1 - Credit Card
 	2 - Check
@@ -366,7 +378,59 @@
 	</CFTRY>
 	<cfreturn retvar>
 </cffunction>
-
+<cffunction name="AutoshipProfileSale" returntype="string" output="yes" access="remote" description="Creates a PayToken for Furture Billings" hint="Test the Connection you should recieve XML back.">
+	<cfargument name="userprofileid" type="string" Required="yes">
+	<cfargument name="last4digits" type="string" Required="yes">
+	<cfargument name="CardCVV" type="string" required="false" >
+	<cfargument name="Amount" type="string" Required="yes">
+	<cfargument name="OrderID" type="string" Required="yes">
+	<cfargument name="intBrandID" type="string" Required="no">
+	
+	<CFIF isDefined("arguments.intBrandID") and arguments.intBrandID gt 0>
+		<CFOUTPUT><CFSET this.subid=Evaluate('subID_brandID_' & #arguments.intBrandID#)></CFOUTPUT>
+	</CFIF>
+	<CFOUTPUT>#this.subid#</CFOUTPUT>
+	<cfhttp url="#this.PostURL#" method="Post" resolveurl="NO" > 
+		<cfhttpparam type="header" name="content-type" value="text/xml; charSet=utf-8"> 
+		<cfhttpparam type="FORMFIELD" name="action" value="profile_sale" >
+		<cfhttpparam type="FORMFIELD" name="acctid" value="#this.acctid#" >
+		<cfhttpparam type="FORMFIELD" name="merchantpin" value="#this.MerchantPin#">
+		<cfhttpparam type="FORMFIELD" name="subid" value="#this.subid#" >
+		
+		<cfhttpparam type="FORMFIELD" name="userprofileid" value="#arguments.userprofileid#">
+	
+		<cfhttpparam type="FORMFIELD" name="last4digits" value="#arguments.last4digits#">
+		<cfhttpparam type="FORMFIELD" name="amount" value="#arguments.Amount#" >
+	</cfhttp>
+	
+	<CFINVOKE component="common.cfc.CSVtoQuery" method="CSVToQuery" returnVariable="ParseSaleRequest">
+		<cfinvokeargument name="CSV" value="#Trim(ReplaceNoCase(cfhttp.filecontent,'<html><body><plaintext>',''))#">
+	</CFINVOKE>
+	<CFSET GetColList = 'status,reason,userprofileid'>
+	<CFLOOP query="ParseSaleRequest" >
+		<CFIF ListLen(Column_1,"=") GTE 2 and ListContainsNoCase(GetColList,TRIM(ListGetAt(Column_1,1,"=")),",","false")>
+		<CFSET DynoVar = 'this.Payment' & TRIM(ListGetAt(Column_1,1,"=")) >
+		<CFPARAM Name="#DynoVar#" default="#TRIM(ListGetAt(Column_1,2,"="))#">
+		</cfif>
+	</CFLOOP>
+	<CFPARAM Name="this.PaymentReason" default="Accepted">
+	<CFPARAM Name="this.PaymentUserProfileID" default="0">
+	 <cfstoredproc procedure="pUpdate_Order_Payment" debug="yes" datasource="#application.datasource#">		
+		<cfprocresult name="pUpdate_Order_Payment_Result">	
+		<cfprocparam cfsqltype="CF_SQL_INTEGER" variable="intOrderID" type="in" value="#arguments.OrderID#">
+		<cfprocparam cfsqltype="cf_sql_nvarchar" variable="strPaymentResult" type="in" value="#Trim(ReplaceNoCase(cfhttp.filecontent,'<html><body><plaintext>',''))#">
+		<cfprocparam cfsqltype="cf_sql_decimal" variable="amtPaid" scale="2" type="in" value="#arguments.Amount#">
+	</cfstoredproc> 
+	
+	<CFSET retvar  = this.PaymentReason>
+	<CFTRY>
+	
+		<CFCATCH>
+			<CFSET retvar  = -1>
+		</CFCATCH>
+	</CFTRY>
+	<cfreturn retvar>
+</cffunction>
 </cfcomponent>
 
 

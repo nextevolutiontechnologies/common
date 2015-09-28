@@ -58,7 +58,7 @@
 							
 				#</CFOUTPUT>
 		</CFSAVECONTENT>
-		<CFINVOKE component="cfc.SendEmailAPI" method="SendEmail" returnVariable="SendEmail_results">
+		<CFINVOKE method="SendEmail" returnVariable="SendEmail_results">
 			<cfinvokeargument name="SendFROM" value="#efrom#">
 			<cfinvokeargument name="SendTO" value="#eto#">
 			<cfinvokeargument name="SendSUBJECT" value="#eSubject#">
@@ -76,12 +76,13 @@
 <cffunction name="SendEnrollmentConfirmation" returntype="boolean" output="no" access="remote">
 	<cfargument name="OrderID" type="numeric" required="yes">
 	<cfargument name="MemberID" type="numeric" required="yes">
+	<cfargument name="intBrandID" type="numeric" required="no" default="1">
 	
 	<CFSET retvar  = 0>
 	<CFTRY>
 		<CFQUERY name="pGetOrdEmailInfoResults" datasource="#Application.Datasource#">
 			<!--- SELECT *  FROM dbo.EMAIL WHERE intEmailID = 1300 --->
-			select * from vGetEmailList_NEW where intEmailID=1300 and intlangID=#session.lang#
+			select top 1 * from vGetEmailList_NEW where  intEmailTypeID=12 and intBrandID='#arguments.intBrandID#' and intlangID=#session.lang#
 		</CFQUERY>
 		<cfstoredproc procedure="dbo.pGetOrderInfo" debug="no" datasource="#application.datasource#">		
 			<cfprocresult name="pGetOrderInfo_Results">
@@ -92,7 +93,7 @@
 			<cfprocparam variable="intMemberID" cfsqltype="cf_sql_integer"  value="#arguments.MemberID#" >
 			<cfprocparam variable="strMemberGUID" cfsqltype="cf_sql_nvarchar" null='true' >	
 		</cfstoredproc>
-		<CFINVOKE component="cfc.SecureAPI" method="ResetPassword"  returnVariable="ResetPasswordResults">
+		<CFINVOKE component="common.cfc.SecureAPI" method="ResetPassword"  returnVariable="ResetPasswordResults">
 			<cfinvokeargument name="intMemberID" value="#arguments.MemberID#">
 		</CFINVOKE>
 		<CFSET LineItems = ValueList(pGetOrderInfo_Results.strProduct,"<BR>")>
@@ -102,8 +103,8 @@
 		<cfset eto = " Powervida Enrollment <Enrollments@powervida.com>">
 		<cfset eto = pGetMemberInfo_Results.strFirstName & " " & pGetMemberInfo_Results.strLastName  & "<" & pGetMemberInfo_Results.strEmail & ">">
 		<CFSAVECONTENT variable="EmailContent">
-		<CFOUTPUT>
-						#REPLACE(
+		<CFOUTPUT>		#REPLACE(
+							REPLACE(
 							REPLACE(
 							REPLACE(
 							REPLACE(
@@ -119,6 +120,7 @@
 							REPLACE(
 							REPLACE(pGetOrdEmailInfoResults.strContent,"$$ORDERID$$",pGetOrderInfo_Results.intOrderID,"All")
 							,"$$ORDERFIRSTNAME$$",pGetOrderInfo_Results.strOrderFirstName,"All") 
+							,"$$MEMBERID$$",arguments.MemberID,"All") 
 							,"$$ORDERDATE$$",DateFormat(pGetOrderInfo_Results.dtOrder,"mm/dd/yyyy"),"All")
 							,"$$LINEITEMS$$",LineItems,"All")
 							,"$$ORDERSUBTOTAL$$",DollarFormat(pGetOrderInfo_Results.OrderSubTotal),"All")
@@ -131,14 +133,12 @@
 							,"$$MEMBERPASSWORD$$",ResetPasswordResults,"All")
 							,"$$ORDERADDRESS$$",pGetOrderInfo_Results.strOrderAddress &' '& pGetOrderInfo_Results.strOrderAddress2,"All")
 							,"$$CITYSTATEZIP$$",pGetOrderInfo_Results.strOrderCity &' '& pGetOrderInfo_Results.strOrderStateCode &' '& pGetOrderInfo_Results.strOrderZip,"All")
-							,"$$ORDERCOUNTRY$$",'USA',"All")
-							
-				#</CFOUTPUT>
+							,"$$ORDERCOUNTRY$$",'USA',"All")#</CFOUTPUT>
 		</CFSAVECONTENT>
-		<CFINVOKE component="cfc.SendEmailAPI" method="SendEmail" returnVariable="SendEmail_results">
+		<CFINVOKE method="SendEmail" returnVariable="SendEmail_results">
 			<cfinvokeargument name="SendFROM" value="#efrom#">
 			<cfinvokeargument name="SendTO" value="#eto#">
-			<cfinvokeargument name="SendSUBJECT" value="#eSubject#">
+			<cfinvokeargument name="SendSUBJECT" value="#eSubject#-666">
 			<cfinvokeargument name="SendCONTENT" value="#EmailContent#">
 		</CFINVOKE>
 		<CFCATCH>
@@ -174,7 +174,7 @@
 				<CFINCLUDE template="/content/emails/contact-request.html">
 		</CFSAVECONTENT>
 		
-			<CFINVOKE component="cfc.SendEmailAPI" method="SendEmail" returnVariable="SendEmail_results">
+			<CFINVOKE method="SendEmail" returnVariable="SendEmail_results">
 				<cfinvokeargument name="SendFROM" value="#efrom#">
 				<cfinvokeargument name="SendTO" value="#eto#">
 				<cfinvokeargument name="SendSUBJECT" value="#eSubject#">
@@ -197,7 +197,7 @@
 			<cfprocparam variable="intCustID" cfsqltype="cf_sql_integer"  value="#arguments.customerID#">	
 		</cfstoredproc>
 		
-		<CFINVOKE component="cfc.SecureAPI" method="GeneratePassword" returnVariable="GeneratePassword_results"></CFINVOKE>
+		<CFINVOKE component="common.cfc.SecureAPI" method="GeneratePassword" returnVariable="GeneratePassword_results"></CFINVOKE>
 		<!--- update password in customer table --->
 
 		<cfstoredproc procedure="pUpdate_CustomerPassword" debug="yes" datasource="#application.datasource#">
@@ -218,7 +218,7 @@
 							
 				#</CFOUTPUT>
 		</CFSAVECONTENT>
-		<CFINVOKE component="cfc.SendEmailAPI" method="SendEmail" returnVariable="SendEmail_results">
+		<CFINVOKE method="SendEmail" returnVariable="SendEmail_results">
 			<cfinvokeargument name="SendFROM" value="#efrom#">
 			<cfinvokeargument name="SendTO" value="#eto#">
 			<cfinvokeargument name="SendSUBJECT" value="#eSubject#">
@@ -247,7 +247,7 @@
 			<cfprocparam variable="intCustID" cfsqltype="cf_sql_integer"  value="#arguments.customerID#">	
 		</cfstoredproc>
 		
-		<CFINVOKE component="cfc.SecureAPI" method="GeneratePassword" returnVariable="GeneratePassword_results"></CFINVOKE>
+		<CFINVOKE component="common.cfc.SecureAPI" method="GeneratePassword" returnVariable="GeneratePassword_results"></CFINVOKE>
 		<!--- update password in customer table --->
 
 		<cfstoredproc procedure="pUpdate_CustomerPassword" debug="yes" datasource="#application.datasource#">
@@ -270,7 +270,7 @@
 							
 				#</CFOUTPUT>
 		</CFSAVECONTENT>
-		<CFINVOKE component="cfc.SendEmailAPI" method="SendEmail" returnVariable="SendEmail_results">
+		<CFINVOKE method="SendEmail" returnVariable="SendEmail_results">
 			<cfinvokeargument name="SendFROM" value="#efrom#">
 			<cfinvokeargument name="SendTO" value="#eto#">
 			<cfinvokeargument name="SendSUBJECT" value="#eSubject#">
